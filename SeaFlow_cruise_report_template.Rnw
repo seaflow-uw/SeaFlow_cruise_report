@@ -1,0 +1,443 @@
+\documentclass[11pt, oneside]{article}
+\usepackage{graphicx}			% Postscript figs
+\usepackage{amssymb}			% Mathy stuff
+\usepackage{epstopdf}			% More postscript figs
+\usepackage{ragged2e}			% allow ragged right AND paragraph indentation
+\usepackage{pslatex}			% Times New Roman
+\usepackage[round]{natbib}		% Enable Harvard style citation
+\usepackage[T1]{fontenc}			% hanging indents
+\usepackage{indentfirst}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{framed}
+\usepackage[nodayofweek]{datetime}
+\usepackage[hidelinks, colorlinks = true, urlcolor = blue, citecolor = blue, linkcolor = blue]{hyperref}	% Live links to urls, emails, and citations
+
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\newcommand{\pkg}[1]{\texttt{#1}}	% Typeset programming packages
+\newcommand{\R}{\textsf{R}}	 % Typeset R logo
+\renewcommand{\thefootnote}{\textcolor{black}{\arabic{footnote}}}	% Change footnote color from red to black
+\newdateformat{mydate}{\twodigit{\THEDAY}{ }\monthname[\THEMONTH] \THEYEAR}
+
+\captionsetup{labelsep=period}	% Use a period instead of a colon for figure and table captions
+
+\textwidth = 6.5 in
+\textheight = 9 in
+\oddsidemargin = 0 in
+\evensidemargin = 0.25 in
+\topmargin = 0.0 in
+\headheight = 0.0 in
+\headsep = 0.0 in
+\parskip = 1em
+\parindent = 0.5in
+\RaggedRightParindent = 0.5in
+
+\begin{document}
+%\SweaveOpts{concordance = TRUE}
+% ----------------
+<<echo = FALSE>>=
+setwd("~/Documents/SeaFlow/Cruise_report/")
+
+library(knitr)
+options(digits = 2)
+library(xtable)
+library(popcycle)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(latex2exp)
+
+cruise <- "KOK1806"
+path <- "~/Documents/SeaFlow/"
+opp.dir <- paste0(path, cruise, "/", cruise, "_opp")
+vct.dir <- paste0(path, cruise, "/", cruise, "_vct")
+db <- paste0(path, cruise, "/", cruise, ".db")
+sfl <- get.sfl.table(db)
+sfl$time <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")
+stat <- get.stat.table(db)
+stat$time <- as.POSIXct(stat$time, format = "%FT%T", tz = "GMT")
+
+cruise_name <- gsub("_", " ", cruise)
+date_time <- as.POSIXct(sfl$date, format = '%FT%T', tz = 'GMT')
+dates <- strftime(date_time, format = '%d %B %Y')
+start_date <- dates[1]
+end_date <- dates[length(dates)]
+
+@
+
+% -----------------
+\begin{titlepage}
+
+	\centering{
+	\vspace*{\baselineskip}
+
+	% Title
+	\rule{\textwidth}{1.6pt}\vspace*{-\baselineskip}\vspace*{2pt}
+	\rule{\textwidth}{0.4pt}
+
+
+	\vspace{0.75\baselineskip}
+	{\Huge SeaFlow Cruise Report}\\ {\Large \Sexpr{cruise_name} \\
+	\Sexpr{paste0(start_date, ' - ', end_date)} \\} % Title
+	\vspace{0.75\baselineskip}
+
+	\rule{\textwidth}{0.4pt}\vspace*{-\baselineskip}\vspace{3.2pt}
+	\rule{\textwidth}{1.6pt}
+
+	\vspace{2\baselineskip}
+
+	% Authors
+
+	{\Large
+	\begin{tabular}{rl}
+
+		Fran\c{c}ois Ribalet & \href{mailto:ribalet@uw.edu}{ribalet@uw.edu}\\
+		Annette Hynes & \href{mailto:ahynes@uw.edu}{ahynes@uw.edu}\\
+		Chris Berthiaume & \href{mailto:chrisbee@uw.edu}{chrisbee@uw.edu}\\
+		Jarred Swalwell & \href{mailto:jarred@uw.edu}{jarred@uw.edu}\\
+	\end{tabular}
+	}
+
+	\vspace{0.5\baselineskip} % Whitespace below the editor list
+
+	{\Large School of Oceanography\\ University of Washington \\ Seattle, WA 98195 \\ }
+
+	\vfill % Space fill
+
+	\includegraphics[width = 5 in]{oceanography-logo-banner-2012-darktext.png} 	%UW Logo
+
+	Report created on \mydate \today.
+	}
+
+\end{titlepage}
+
+%----------------------
+
+\RaggedRight
+
+\copyright \the\year{} Fran\c{c}ois Ribalet and Annette Hynes. All rights reserved.  Permission is granted to copy, distribute, and/or modify this document under the terms of the GNU Free Document License, Version 1.3 or any later version published by the Free Software Foundation with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+
+DISCLAIMER:  This document has been generated in an automated fashion using \LaTeX, \R{}, and \pkg{knitR}.  It is provided ``as is,'' without any warranty whatsoever whether express, implied, or statutory, including but not limited to any warranty of merchantability or fitness for a particular purpose or any warranty that the contents of the item will be error-free.
+
+%-----------------------
+
+{
+\hypersetup{hidelinks}	% Otherwise highlighted in red
+\tableofcontents
+}
+
+\newpage
+
+%-----------------------
+
+\section{Introduction}
+
+Flow cytometry measures light scatter and fluorescence emission of individual phytoplankton cells at rates of up to several thousand cells per second. Light scattering is roughly proportional to the cell size, and fluorescence is unique to the emission spectra of cell pigments. These parameters can be used to identify populations of phytoplankton with similar characteristics.
+
+The data presented in this report were collected using a new generation of flow-through flow cytometer, known as SeaFlow (Fig. \ref{fig:SeaFlow}), that allows continuous, real-time shipboard observations of phytoplankton cells 0.5 - 20 $\mu$m in diameter \citep{swalwell:SeaFlow}.  Our analyses focus on picocyanobacteria and cells 0.5 - 5 $\mu$m in diameter.
+
+SeaFlow data files are written in 3-min intervals along with GPS position, the universal time constant (UTC), and other data collected through the ship's network (salinity, bulk chlorophyll, temperature, etc.). Automated analysis and visualization of measured phytoplankton populations were performed using our software package called \pkg{popcycle}\footnote{The \pkg{popcycle} package is licensed under the Artistic License v3.0.  It is therefore free to use and redistribute.  However, we, the copyright holders, wish to maintain primary artistic control over ay further development.} \citep{ribalet:flowPhyto}. The software written in the \R{} statistical computing environment provides a collection of functions that turn the high volume of raw SeaFlow files into a summary data table and plots. Multivariate gating of predefined phytoplankton populations can be manual or automated via statistical clustering methods. Please cite \citet{ribalet:flowPhyto} if you use the software in work leading to publication.
+
+For more information about the SeaFlow project, please visit our website at: \newline \vspace{-1em} \href{https://armbrustlab.ocean.washington.edu/tools/seaflow}{https://armbrustlab.ocean.washington.edu/tools/seaflow}.
+
+\begin{figure}[h]
+   \centering
+   \includegraphics[width = 4.5 in]{Plankton.jpg} % requires the graphicx package
+   \caption{SeaFlow on the \emph{R/V Thomas G. Thompson} (University of Washington) in April, 2010.}
+   \label{fig:SeaFlow}
+\end{figure}
+
+\clearpage
+
+%-----------------------
+
+<<echo = FALSE>>=
+
+n_files <- length(unique(stat$file))
+bad <- subset(stat, flag > 0)
+n_flag <- length(unique(bad$file))
+
+duration <- ceiling(as.numeric(difftime(date_time[length(date_time)], date_time[1], units = "days")))
+
+@
+
+%-----------------------
+
+\section{Results}
+
+\subsection{Hydrographic features}
+
+When available, SeaFlow records other underway measurements (such as temperature, salinity, and bulk fluorescence) collected from the same seawater supply. WARNING: these data are presented `as-is', without calibration or any prior quality control check.
+
+\begin{figure}[h]
+   \centering
+
+<<echo = FALSE, out.width = '6in'>>=
+
+	time_num <- as.numeric(sfl$time)
+	time_num <- (time_num - min(time_num))/(24*60*60)
+	a <- grobTree(textGrob('a', x=unit(0.9, "npc"), y=unit(0.9, "npc")))
+	b <- grobTree(textGrob('b', x=unit(0.9, "npc"), y=unit(0.9, "npc")))
+	c <- grobTree(textGrob('c', x=unit(0.9, "npc"), y=unit(0.9, "npc")))
+	d <- grobTree(textGrob('d', x=unit(0.9, "npc"), y=unit(0.9, "npc")))
+	e <- grobTree(textGrob('e', x=unit(0.95, "npc"), y=unit(0.9, "npc")))
+	p <- list()
+
+	 p[[1]] <- ggplot(sfl, aes(time, ocean_tmp)) + geom_point() + theme_bw() + labs(x = '', y = "Temp (C)") + annotation_custom(a)
+	 p[[2]] <- ggplot() + geom_point(aes_string(sfl$lon, sfl$lat, colour = sfl$ocean_tmp), size=1, alpha=0.5, show.legend = T) +
+  		borders('world', colour = 'gray85', fill = 'gray80') +
+    	labs(x='Longitude', y= 'Latitude') +
+    	coord_fixed(ratio = 1, xlim = range(sfl[,'lon'], na.rm=T), ylim = range(sfl[, 'lat'], na.rm = T)) +
+    	theme_bw() + annotation_custom(b) +
+			scale_color_gradientn(colours=viridis::viridis(100), name = 'Temp')
+	 p[[3]] <- ggplot(sfl, aes(time, salinity)) + geom_point() + theme_bw() + labs(x = '', y = 'Salinity (PSU)') + annotation_custom(c)
+	 p[[4]] <- ggplot() + geom_point(aes_string(sfl$lon, sfl$lat, colour = sfl$salinity), size=1, alpha=0.5, show.legend = T) +
+  		borders('world', colour = 'gray85', fill = 'gray80') +
+    	labs(x='Longitude', y= 'Latitude') +
+    	coord_fixed(ratio = 1, xlim = range(sfl[,'lon'], na.rm=T), ylim = range(sfl[, 'lat'], na.rm = T)) +
+    	theme_bw() + annotation_custom(d) +
+			scale_color_gradientn(colours=viridis::viridis(100), name = 'Salinity')
+	 p[[5]] <- ggplot(sfl, aes(salinity, ocean_tmp)) + geom_point(aes(colour = time_num)) + theme_bw() +
+	 		labs(x = 'Salinity (PSU)', y = "Temp (C)") + scale_colour_viridis_c(name = 'Days') + annotation_custom(e)
+	 grid.arrange(grobs = p, nrow = 3, widths = c(1.5, 1), layout_matrix = rbind(c(1, 2), c(3, 4), c(5, 5)))
+@
+
+   \caption{(a) Ocean temperature ($^{\circ}$C) time series, (b) temperature map, (c) salinity (PSU) time series, (d) salinity map, and (e) T-S density plot with heat coloring showing progression through different water masses over time.
+}
+   \label{fig:hydro}
+\end{figure}
+
+\newpage
+\subsection{Phytoplankton Classification}
+
+<<echo = FALSE>>=
+pop_list <- unique(stat$pop)
+not_cell <- c("beads", "unknown")
+phyto_list <- setdiff(pop_list, not_cell)
+stat_phyto <- subset(stat, pop %in% phyto_list & flag == 0)
+n_phyto <- length(phyto_list)
+phyto_list_txt <- phyto_list
+phyto_list_txt <- gsub("croco", "Crocosphaera", phyto_list_txt)
+phyto_list_txt <- gsub("prochloro", "Prochlorococcus", phyto_list_txt)
+phyto_list_txt <- gsub("synecho", "Synechococcus", phyto_list_txt)
+phyto_list_txt <- gsub("picoeuk", "Picoeukaryotes", phyto_list_txt)
+
+phyto_inline <- phyto_list_txt[1]
+for (i in seq(2, (length(phyto_list_txt) - 1))){
+	phyto_inline <- paste0(phyto_inline, ", ", phyto_list_txt[i])
+}
+phyto_inline <- paste0(phyto_inline, ", and ", phyto_list_txt[length(phyto_list_txt)])
+
+@
+
+The software was set up to cluster validated data into 4 phytoplankton populations, of which the following were found during the cruise: \Sexpr{phyto_inline}. `fsc small’ represents the forward angle light scatter, which is roughly proportional to cell size; `chl small’ represents the red fluorescence from chlorophyll; `pe’ represents the orange fluorescence from phycoerythrin and is used to identify Synechococcus and Crocosphaera. The cytograms below are made up of multiple concatenated files and show the distribution of particle optical characteristics (Fig. \ref{fig:phyP_class} a, b) and the identification of \Sexpr{n_phyto} populations (Fig. \ref{fig:phyP_class} c, d).
+
+\begin{figure}[h]
+   \centering
+
+<<echo = FALSE, out.width = '5.5in'>>=
+opp.list <- get.opp.files(db, outliers = TRUE)
+dd <- seq(30, length(opp.list), length.out = 25)
+OPP <- NULL
+
+	for(i in dd){
+
+			opp.name <- opp.list[i]
+			opp <- try(get.opp.by.file(opp.dir = opp.dir, file.name = opp.name, vct.dir = vct.dir, quantile = 50))
+			if(nrow(opp)){ opp$file <- opp.name
+					OPP <- rbind(OPP, opp)
+			}
+	}
+	OPP$file <- 'Concatenated'
+
+a <- grobTree(textGrob('a', x=unit(0.1, "npc"), y=unit(0.9, "npc")))
+b <- grobTree(textGrob('b', x=unit(0.1, "npc"), y=unit(0.9, "npc")))
+c <- grobTree(textGrob('c', x=unit(0.1, "npc"), y=unit(0.9, "npc")))
+d <- grobTree(textGrob('d', x=unit(0.1, "npc"), y=unit(0.9, "npc")))
+
+p <- list()
+p[[1]] <-  plot_cytogram(OPP, para.x="fsc_small", para.y="chl_small") + annotation_custom(a)
+p[[2]] <- plot_cytogram(OPP, para.x="fsc_small", para.y="pe") + annotation_custom(b)
+p[[3]] <-  plot_vct_cytogram(OPP, para.x="fsc_small", para.y="chl_small") + annotation_custom(c)
+p[[4]] <- plot_vct_cytogram(OPP, para.x="fsc_small", para.y="pe") + annotation_custom(d)
+grid.arrange(grobs = p, nrow = 2)
+@
+
+   \caption{Flow cytometric signatures of \Sexpr{n_phyto} phytoplankton populations: \Sexpr{phyto_inline}. Shown are cytograms of a) chlorophyll fluorescence versus forward scatter and b) phycoerythrin fluorescence versus forward scatter, and identified phytoplankton clusters based on c) chlorophyll fluorescence versus forward scatter and d) phycoerythrin fluorescence versus forward scatter.
+}
+   \label{fig:phyP_class}
+\end{figure}
+
+\clearpage
+
+\subsection{Cell densities of phytoplankton populations}
+
+\begin{figure}[h]
+   \centering
+
+<<echo = FALSE, warning = FALSE, out.width = '6in'>>=
+	 	 plot_time(stat_phyto, param = "abundance")
+@
+
+   \caption{Cell abundance (10$^6$ cells L$^{-1}$) time series for \Sexpr{phyto_list_txt} populations.
+}
+   \label{fig:phyP_abund}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[h]
+   \centering
+<<echo = FALSE, warning = FALSE, out.width = '6in'>>=
+
+p <- list()
+for (i in seq(1, length(phyto_list))){
+	phyto <- phyto_list[i]
+	this_stat <- subset(stat_phyto, pop == phyto)
+	a <- grobTree(textGrob(letters[i], x=unit(0.9, "npc"), y=unit(0.9, "npc")))
+	p[[i]] <- ggplot() + geom_point(aes_string(this_stat$lon, this_stat$lat, colour = this_stat$abundance), size=1, alpha=0.5, show.legend = T) +
+		 borders('world', colour = 'gray85', fill = 'gray80') +
+		 labs(x='Longitude', y= 'Latitude', title = phyto_list_txt[i]) +
+		 coord_fixed(ratio = 1, xlim = range(this_stat[,'lon'], na.rm=T), ylim = range(this_stat[, 'lat'], na.rm = T)) +
+		 theme_bw() + annotation_custom(a) +
+		 scale_color_gradientn(colours=viridis::viridis(100), name = 'Abund.')
+}
+grid.arrange(grobs = p, nrow = 2)
+@
+   \caption{Cell abundance (10$^6$ cells L$^{-1}$) maps for \Sexpr{phyto_list_txt}  populations.
+}
+   \label{fig:phyP_abund_map}
+\end{figure}
+
+\clearpage
+
+\subsection{Cell properties of phytoplankton populations}
+
+\begin{figure}[h]
+   \centering
+<<echo = FALSE, warning = FALSE, out.width = '6in'>>=
+	 	 	 plot_time(stat_phyto, param = "diam_mid")
+@
+   \caption{Average diameter ($\mu$m) of the identified phytoplankton populations (\Sexpr{phyto_list_txt}).
+}
+   \label{fig:phyP_fsc}
+\end{figure}
+
+\begin{figure}[h]
+   \centering
+<<echo = FALSE, warning = FALSE, out.width = '6in'>>=
+	 	 	 plot_time(stat_phyto, param = "chl_small")
+@
+   \caption{Red fluorescence (in arbitrary units) indicative of chlorophyll content of the identified phytoplankton populations (\Sexpr{phyto_list_txt}).
+}
+   \label{fig:phyP_chl}
+\end{figure}
+
+\begin{figure}[h]
+   \centering
+<<echo = FALSE, warning = FALSE, out.width = '6in'>>=
+	 	 	 plot_time(stat_phyto, param = "pe")
+@
+   \caption{Orange fluorescence (in arbitrary units) indicative of phycoerythrin content of the identified phytoplankton populations (\Sexpr{phyto_list_txt}).
+}
+   \label{fig:phyP_chl}
+\end{figure}
+
+\clearpage
+
+%\subsection{Cytometric diversity}
+
+%The cytometry diversity indices express the organization and structure of a microbial community, its richness in physiological and genetic variations. They are based on the bio-optical properties of the community measured at the single cell level by flow cytometry. We used the \R{} package \pkg{cytoDiv}, which computes the cytometric diversity indices as described in \citet{li:diversity}.
+
+%\begin{figure}[h]
+%   \centering
+%   \includegraphics[width = 5 in]{Plankton.jpg} % requires the graphicx package
+%   \caption{Diversity ($e^H$) and Evenness ($J$) of the entire microbial community, plotted over time from 2009-09-30 14:06:03 to 2009-10-01 16:07:28, and spatially.
+%}
+%   \label{fig:phyP_diversity}
+%\end{figure}
+
+%\clearpage
+%----------------
+\section{Data Curation}
+
+In flow cytometric analysis, proper optical alignment and fluidic stability are required to ensure data quality\footnote{SeaFlow addresses measurement errors associated with optical misalignment by employing and imaging-based control loop that continuously corrects for laser pointing instability.  It also addresses measurement errors associated with fluidic instability via a pressure sensor and variables speed gear pump that form a control loop.}. We assessed a) instrument performance via flow rate and event rate; b) filtration via the ratio of optimally-positioned particles (OPP) to the total number of detected particles (EVT) and the light scattering signals of the reference microbead standard; and c) gating via detection of ouliers in average cell scattering signals or abundance. Examples of each flag are shown in Fig. \ref{fig:flag}.
+
+During the cruise, the instrument recorded a total of \Sexpr{n_files} files from \Sexpr{start_date} to \Sexpr{end_date}, for a total of \Sexpr{duration} days. Our software identified \Sexpr{n_flag*100/n_files}\% of the files as outliers, which were removed from further analysis (Fig. \ref{fig:flag}).
+
+\begin{figure}[h]
+   \centering
+
+<<echo = FALSE, out.width = '5in'>>=
+
+flag_1 <- subset(stat, flag == 1)
+stat2 <- subset(stat, !(flag==1))
+flag_2 <- subset(stat, flag == 2)
+stat3 <- subset(stat, !(flag==1 | flag == 2))
+flag_3 <- subset(stat, flag == 3)
+pro <- subset(stat3, pop = "prochloro" & quantile == 50)
+pro_flag <- subset(pro, flag == 3)
+
+
+par(mfrow = c(3, 1), mar = c(2, 4, 1, 1), pty = "m")
+plot(stat$time, stat$flow_rate)
+points(flag_1$time, flag_1$flow_rate, col = 2)
+
+plot(stat2$time, stat2$opp_evt_ratio)
+points(flag_2$time, flag_2$opp_evt_ratio, col = 2)
+
+plot(pro$time, pro$fsc_small)
+points(pro_flag$time, pro_flag$fsc_small, col = 2)
+@
+
+   \caption{Flagged data: (a) flow rate (mL min$^{-1}$), (b) EVT:OPP ratio, and (c) Prochlorococcus forward scatter (arbitrary units) during the cruise. Validated files and outliers are represented in black and red, respectively.
+}
+   \label{fig:flag}
+\end{figure}
+
+\clearpage
+
+%----------------
+\section{Variables}
+
+\begin{center}
+	\begin{longtable}{lp{1in}p{1.5in}p{3in}}
+
+			\hline
+			Variable &	Long Name & 																		Units&												Description\\
+			\hline
+		\endhead
+			time&				time&																						\%Y-\%m-\%dT\%H:\%M:\%S (UTC)&	\\
+			lat&				latitude&																				decimal degree North&					\\
+			lon&				longitude&																			decimal degree South&					\\
+			depth&			sample depth&																		m&														\\
+			temp&				seawater temperature&														deg C&												\\
+			salinity&		seawater salinity&															psu&													\\
+			par&				surface light intensity&												TBD&													\\
+			quantile&		quantile&																				percent&											quantile for OPP filtrationa (2.5 = conservative approach; 50 = standard approach; 97.5 = loosen approach, see \href{https://github.com/armbrustlab/seaflow-filter}{https://github.com/armbrustlab/seaflow-filter} for more details)\\
+			pop&				population&																			prochloro (Prochlorococcus), synecho (Synechococcus), picoeuk (picoeukayotes),beads (internal standard), croco (Crocosphaera),unknown (unclassified particles)&	population clustering based on a misture of manual gaing and semi-supervized algorithm, see \href{https://github.com/armbrustlab/popcycle}{https://github.com/armbrustlab/popcycle} for more details\\
+			chl\_small&	mean of chlorophyll fluorescence distribution&	unitless&											Red fluorescence collected using a 692-40 bandpass filter\\
+			pe&					mean of phycoerythrin fluorescence distribution& unitless&										Orange fluorescence collected using a 572-27 bandpass filter\\
+			fsc\_small&	mean of the forward light scatter distribution&	unitless&											Forward light scatter collected using a 457-50 bandpass filter\\
+			diam\_lwr&		lower bound of mean cell diameter&							micrometer&										Mie-based estimation of cell diameter using index of refraction of 1.35, see \href{https://github.com/armbrustlab/fsc-size-calibration}{https://github.com/armbrustlab/fsc-size-calibration} for more details\\
+			diam\_mid&		mid bound of mean cell diameter&								micrometer&										Mie-based estimation of cell diameter using index of refraction of 1.375, see \href{https://github.com/armbrustlab/fsc-size-calibration}{https://github.com/armbrustlab/fsc-size-calibration} for more details\\
+			diam\_upr&		upper bound of mean cell diameter&							micrometer&										Mie-based estimation of cell diameter using index of refraction of 1.40, see \href{https://github.com/armbrustlab/fsc-size-calibration}{https://github.com/armbrustlab/fsc-size-calibration} for more details\\
+			Qc\_lwr&			lower bound of mean carbon quota&								picogram carbon per cell&			Carbon cell quotas estimates, based on lower bound of cell diameter, see \href{https://github.com/armbrustlab/fsc-poc-calibration}{https://github.com/armbrustlab/fsc-poc-calibration} for more details\\
+			Qc\_mid&			mid bound of mean carbon quota&									picogram carbon per cell&			Carbon cell quotas estimates, based on mid bound of cell diameter, see \href{https://github.com/armbrustlab/fsc-poc-calibration}{https://github.com/armbrustlab/fsc-poc-calibration} for more details\\
+			Qc\_upr&			upper bound of mean carbon quota&								picogram carbon per cell&			Carbon cell quotas estimates, based on mid bound of cell diameter, see \href{https://github.com/armbrustlab/fsc-poc-calibration}{https://github.com/armbrustlab/fsc-poc-calibration} for more details\\
+			abundance&	cell abundance&																	cells per microliter&					mean of cell abundance, see \href{https://github.com/armbrustlab/seaflow-virtualcore}{https://github.com/armbrustlab/seaflow-virtualcore} for more details\\
+			abundance.se&	standard error of cell abundance&							cells per microliter&					standard error based on uncertainties in converting sample stream pressure to flow rate, see \href{https://github.com/armbrustlab/seaflow-virtualcore}{https://github.com/armbrustlab/seaflow-virtualcore} for more details\\
+			\hline
+		\end{longtable}
+\end{center}
+
+\clearpage
+%----------------
+\addcontentsline{toc}{section}{Bibliography}
+\bibliographystyle{agsm}
+\bibliography{SeaFlow_cruise_report.bib}
+
+
+%-----------------------
+
+\end{document}
