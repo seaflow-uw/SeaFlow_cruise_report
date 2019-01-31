@@ -7,10 +7,12 @@ In a bash shell, use R to knit a LaTeX .tex file:
 Rscript -e "library(knitr); knit('SeaFlow_cruise_report_template.Rnw')"
 ```
 
-Build the pdf from the LaTeX file.  You may need to do this 3 times sequentially to get all the labels and references complete:
+Build the pdf from the LaTeX file.  You may need to do this 3 times sequentially to get all the labels and references complete.
+
+WARNING:  The "--shell-escape" option allows a shell to download files from our GitHub repository required to build the LaTeX file.  Double check that these are all files you trust.    
 
 ```
-pdflatex SeaFlow_cruise_report_template.tex
+pdflatex --shell-escape SeaFlow_cruise_report_template.tex
 ```
 
 To get the bibliography, use BibTeX:
