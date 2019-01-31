@@ -46,6 +46,9 @@
 \parindent = 0.5in
 \RaggedRightParindent = 0.5in
 
+\newcommand*{\grabto}[2]{\IfFileExists{#2}{}{\immediate\write18{curl \detokenize{#1 -o #2}}}}
+
+\grabto{https://raw.githubusercontent.com/armbrustlab/SeaFlow_cruise_report/master/SeaFlow_cruise_report.bib?token=AJO6Ykc4eaUYx_cfMVLBUKwsMPdXwhHoks5cXHI0wA\%3D\%3D}{SeaFlow_cruise_report.bib}
 
 %\SweaveOpts{concordance = TRUE}
 % ----------------
@@ -532,9 +535,7 @@ During the cruise, the instrument recorded a total of \Sexpr{n_files} files from
 %----------------
 \addcontentsline{toc}{section}{Bibliography}
 \bibliographystyle{agsm}
-\immediate\write18{curl https://raw.githubusercontent.com/armbrustlab/SeaFlow_cruise_report/master/SeaFlow_cruise_report.bib> SeaFlow_cruise_report.bib}
 \bibliography{SeaFlow_cruise_report.bib}
-
 
 %-----------------------
 
