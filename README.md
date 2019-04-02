@@ -1,5 +1,8 @@
 # SeaFlow_cruise_report
-This repository consists of a knitR file and supporting documents to build an R and LaTeX cruise report for SeaFlow data.
+This repository consists of a knitR file and supporting documents to build an R and LaTeX cruise report for SeaFlow data.  To customise the report for your cruise:
+* Change `path`.
+* Update `cruise` and `project`.
+* Tweak the identification of temperature and salinity outliers in the `hydro` block.
 
 In a bash shell, use R to knit a LaTeX .tex file:
 
