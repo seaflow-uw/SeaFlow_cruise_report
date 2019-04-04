@@ -2,7 +2,7 @@
 This repository consists of a knitR file and supporting documents to build an R and LaTeX cruise report for SeaFlow data.  To customise the report for your cruise:
 * Ensure you are connected to the SeaFlow-OPP drive.  Otherwise, change `path` to a local directory containing the database, OPP files, and VCT files for the cruise.
 * Update `cruise`. 
-* Cruise identifiers will be pulled from the Google sheets file "SeaFlow instrument log."  To authorize R to access this worksheet, copy the link provided in your terminal and paste it in a browser. You should only have to do this once.
+* Cruise identifiers will be pulled from the Google sheets file "SeaFlow instrument log."  To authorize R to access this worksheet, copy the link provided in your terminal during your first `knitr` run and paste it in a browser. You should only have to do this once.
 * Tweak the identification of temperature and salinity outliers in the `hydro` block.
 
 In a bash shell, use R to knit a LaTeX .tex file:
