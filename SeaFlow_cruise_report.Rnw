@@ -73,7 +73,8 @@ library(maps)
 library(data.table)
 library(openxlsx)
 
-cruise <- "MGL1704";
+args <- commandArgs(TRUE)
+cruise <- as.character(args[1])
 
 # Get cruise synonyms
 meta <- googlesheets::gs_read(gs_title('SeaFlow\ instrument\ log', verbose = FALSE))
