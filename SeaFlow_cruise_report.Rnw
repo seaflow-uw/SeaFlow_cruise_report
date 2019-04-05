@@ -73,7 +73,7 @@ library(maps)
 library(data.table)
 library(openxlsx)
 
-cruise <- "KOK1806";
+cruise <- "MGL1704";
 
 # Get cruise synonyms
 meta <- googlesheets::gs_read(gs_title('SeaFlow\ instrument\ log', verbose = FALSE))
@@ -338,8 +338,9 @@ pop_list <- unique(stat$pop)
 not_cell <- c("beads", "unknown")
 phyto_list <- setdiff(pop_list, not_cell)
 stat_phyto <- subset(stat, pop %in% phyto_list & flag == 0)
-n_phyto <- length(phyto_list)
-phyto_list_txt <- phyto_list
+phyto_list2 <- unique(stat_phyto$pop)	# In case an entire population is flagged out
+n_phyto <- length(phyto_list2)
+phyto_list_txt <- phyto_list2
 phyto_list_txt <- gsub("croco", '\\\\textit{Crocosphaera}', phyto_list_txt)
 phyto_list_txt <- gsub("prochloro", "\\\\textit{Prochlorococcus}", phyto_list_txt)
 phyto_list_txt <- gsub("synecho", "\\\\textit{Synechococcus}", phyto_list_txt)
@@ -444,8 +445,8 @@ p <- list()
 cnt <- 0
 phyto_list_TeX <- gsub('\\\\textit', '\\\\\\textit', phyto_list_txt)
 
-for (i in seq(1, length(phyto_list))){
-	phyto <- phyto_list[i]
+for (i in seq(1, length(phyto_list2))){
+	phyto <- phyto_list2[i]
 	this_stat <- subset(stat_phyto, pop == phyto)
 	cnt <- cnt + 1
 	a <- grobTree(textGrob(letters[cnt], x=unit(0.9, "npc"), y=unit(0.9, "npc")))
@@ -482,8 +483,8 @@ Cell diameter ($\mu$m) is estimated by a Mie-based model with parameters calcula
 
 	 p <- list()
 	 cnt <- 0
-	 for (i in seq(1, length(phyto_list))){
-	 	phyto <- phyto_list[i]
+	 for (i in seq(1, length(phyto_list2))){
+	 	phyto <- phyto_list2[i]
 	 	this_stat <- subset(stat_phyto, pop == phyto)
 	 	cnt <- cnt + 1
 	 	a <- grobTree(textGrob(letters[cnt], x=unit(0.9, "npc"), y=unit(0.9, "npc")))
@@ -518,8 +519,8 @@ The plots below show time series and maps of the average carbon cell quota for e
 
 	 p <- list()
 	 cnt <- 0
-	 for (i in seq(1, length(phyto_list))){
-	 	phyto <- phyto_list[i]
+	 for (i in seq(1, length(phyto_list2))){
+	 	phyto <- phyto_list2[i]
 	 	this_stat <- subset(stat_phyto, pop == phyto)
 	 	cnt <- cnt + 1
 	 	a <- grobTree(textGrob(letters[cnt], x=unit(0.9, "npc"), y=unit(0.9, "npc")))
