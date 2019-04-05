@@ -3,14 +3,13 @@ This repository consists of a knitR file and supporting documents to build an R 
 * Knitting this report together requires a plethora of packages in both R and LaTeX.  Check the .Rnw file to make sure you have them all.
 * Download all the files (except README) in this repository and put them in the same directory.  In the terminal `cd` to this directory.
 * Ensure you are connected to the SeaFlow-OPP drive.  Otherwise, change `path` to a local directory containing the database, OPP files, and VCT files for the cruise.
-* Update `cruise` in the knitR file (.Rnw). 
 * Cruise identifiers will be pulled from the Google sheets file "SeaFlow instrument log."  To authorize R to access this worksheet, copy the link provided in your terminal during your first `knitr` run and paste it in a browser. You should only have to do this once.
 * Tweak the outlier detection for temperature and salinity in the `hydro` block.
 
 In a bash shell, use R to knit a LaTeX .tex file:
 
 ```
-Rscript -e "library(knitr); knit('SeaFlow_cruise_report.Rnw')"
+Rscript -e "library(knitr); knit('SeaFlow_cruise_report.Rnw')" cruise_name
 ```
 
 Build the pdf from the LaTeX file.  You may need to do this 3 times sequentially to get all the labels and references complete.
