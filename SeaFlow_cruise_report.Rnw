@@ -84,7 +84,6 @@ project <- paste(meta[which(meta$cruise == cruise),'Project'])
 
 doi <- "TBD"
 path <- "/Volumes/SeaFlow-OPP/latest/"
-setwd(paste0(path, cruise, "/"))
 opp.dir <- paste0(path, cruise, "/", cruise, "_opp")
 vct.dir <- paste0(path, cruise, "/", cruise, "_vct")
 db <- paste0(path, cruise, "/", cruise, ".db")
