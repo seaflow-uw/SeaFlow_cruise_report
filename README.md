@@ -1,5 +1,6 @@
 # SeaFlow_cruise_report
 This repository consists of a knitR file and supporting documents to build an R and LaTeX cruise report for SeaFlow data.  To customise the report for your cruise:
+* Knitting this report together requires a plethora of packages in both R and LaTeX.  Check the .Rnw file to make sure you have them all.
 * Download all the files (except README) in this repository and put them in the same directory.  In the terminal `cd` to this directory.
 * Ensure you are connected to the SeaFlow-OPP drive.  Otherwise, change `path` to a local directory containing the database, OPP files, and VCT files for the cruise.
 * Update `cruise` in the knitR file (.Rnw). 
